@@ -1,0 +1,84 @@
+---
+title: "ASSIGNMENT 4"
+author: "Michael Ersevim"
+date: '2021-10-10'
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+bibliography: bibliography.bib
+---
+
+# Markdown Basics
+
+## Favorite Foods
+Pizza, Filet mignon, Scallops, Lobster rolls and Chocolate mousse cake
+
+## Images
+
+```{r, out.width='25%', fig.align='center', fig.cap='...'}
+knitr::include_graphics('C:/Users/mersevim/OneDrive - Waste Management/Pictures/Saved Pictures/Chips rest.jpg')
+```
+
+## Add a Quote
+
+> "Golf is a good walk spoiled."
+>
+> --- Mark Twain
+
+## Add an Equation
+
+$f(k) = {n \choose k} p^{k} (1-p)^{n-k}$
+
+## Add a Footnote
+
+This is a footnote
+
+## Add Citations
+
+* R for Everyone
+* Discovering Statistics Using R
+
+# Inline Code
+
+## NY Times COVID-19 Data
+
+```{r}
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520/data/nytimes/covid-19-data")
+
+covid_df <- read.csv("us.csv")
+
+head(covid_df)
+```
+
+## R4DS Height vs Earnings
+
+```{r}
+library(ggplot2)
+theme_set(theme_minimal())
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520/data")
+
+## Load the `data/r4ds/heights.csv` to
+heights_df <- read.csv("r4ds/heights.csv")
+
+# https://ggplot2.tidyverse.org/reference/geom_boxplot.html
+## Create boxplots of sex vs. earn and race vs. earn using `geom_point()` and `geom_boxplot()`
+## sex vs. earn
+ggplot(heights_df, aes(x=sex, y=earn)) + geom_point()+ geom_boxplot()
+```
+
+# Tables
+
+## Knitr Table with Kable
+```{r tables-mtcars}
+knitr::kable(iris[1:5, ], caption = 'Sepal Length TAble for Irises')
+```
+## Pandoc Table
+
+pandoc -o output.html input.txt
+
+# References
+
+Thanks to "Bookdown.org" for the easy to use examples for R_Markdown!
