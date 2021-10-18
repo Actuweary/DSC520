@@ -1,0 +1,90 @@
+---
+title: "DSC520_Assignment5_M_ERSEVIM"
+author: "M_ERSEVIM"
+date: "10/17/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment 05, Pt 2
+
+i) Use R to calculate the covariance of the Survey variables and provide an explanation of why you would use this calculation and what the results indicate.
+
+```{r}
+library(ggplot2)
+library(ggm)
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520")
+dir()
+
+## Load the `data/student-survey.csv`
+studsurv_df <- read.csv("data/student-survey.csv")
+head(studsurv_df)
+
+studsurv_cov_mat <- cov(studsurv_df, use="complete.obs")
+print(studsurv_cov_mat)
+
+```
+Ans: Given these UN-normalized results (which would instead be a correlation matrix), we can see from the signs of the matrix a few relationships. First, If you spend more time watching TV, you spend less reading. Second, the more you read, the less happy you are. THird, watching more TV makes you happier. Since gender is a binomial nominal flag, the results are meaningless.
+
+
+ii) Examine the Survey data variables. What measurement is being used for the variables? Explain what effect changing the measurement being used for the variables would have on the covariance calculation. Would this be a problem? Explain and provide a better alternative if needed.
+
+Ans: Maybe I missed something, but I don't know what measurement is being used. A good guess might be hours/week for TimeReading and TimeTV. Gender is just a flag and Happiness might be on a scale of 1 to 100. Changing the metric would only change the results by a scalar. For the special case of Variance,I believe it would increase or decrease by the square of the scale factor. I also think putting all but gender on some scale that was fairly close to each other, it might help a bit in looking at the results in determining relative importance.
+
+
+iii) Choose the type of correlation test to perform, explain why you chose this test, and make a prediction if the test yields a positive or negative correlation?
+
+Ans: I will run the Pearson correlation on time reading and TimeTV. I used it becuase it is a good measurement of the linear relationship between two variables.  
+  I predict a large negative correlation (as mentioned above in part "i") since doing one of these activities would take time away from the other.
+
+```{r}
+
+cor(studsurv_df$TimeReading, studsurv_df$TimeTV, use="complete.obs", method = "pearson")
+
+```
+As predicted, huge neg correlation between Reading TIme and TV time.
+
+
+iv) Perform a correlation analysis of:
+  1) All variables
+  2) A single correlation between two a pair of the variables
+  3) Repeat your correlation test in step 2 but set the confidence interval at 99%
+  4) Describe what the calculations in the correlation matrix suggest about the relationship between the variables. Be specific with your explanation.
+  
+```{r}
+cor(studsurv_df, use="complete.obs", method = "pearson")
+cor(studsurv_df$Happiness, studsurv_df$TimeTV, use="complete.obs", method = "pearson")
+cor.test(studsurv_df$Happiness, studsurv_df$TimeTV, use="complete.obs", method = "pearson", conf.level = 0.99)
+
+```
+Ans: The above cor matrix shows a very strong neg corr between TV and Reading time. Happiness and TV time are pretty strongly correlated, and happiness is negatively correlated to reading time. This makes some sense, as most people prefer to watch TV than to read (or study), so the more you watch TV, the happier you are and the less time you have to read. 
+
+
+v) Calculate the correlation coefficient and the coefficient of determination, describe what you conclude about the results.
+
+```{r}
+
+cor(studsurv_df, use="complete.obs", method = "pearson")
+cor(studsurv_df)^2
+
+```
+All the R-squared values are positive, of course. We conclude that 78.0% of the variance in Time reading and timeTV is accounted for. TimeTV accounts for
+ only 40.5% of the variance of Happiness.
+
+vi) Based on your analysis can you say that watching more TV caused students to read less? Explain.
+
+Based on the results, you can't PROVE that watching more TV caused students to read less, but it is a very reasonable inference. SInce time is a limited reource, 
+it is not unreasonable to expect that if someone spends MORE time watching TV, they'll have LESS time to read. A better causal analysis is that students CHOOSING to watch TV over reading is what caused them to watch more TV and read less.
+
+
+vii) Pick three variables and perform a partial correlation, documenting which variable you are “controlling”. Explain how this changes your interpretation and explanation of the results.
+
+```{r}
+
+pcor(c("Happiness", "TimeTV", "TimeReading"), var(studsurv_df)) # The first variables two will have the partial correlation calculated with TimeReading held constant
+
+```
+I conclude that the time spent watching TV and your happiness level is still strongly correlated, however, some of the time spent reading also increased happiness a little. So when you remove the effect of however much you read, the correlation between TV and happiness went down slightly.
