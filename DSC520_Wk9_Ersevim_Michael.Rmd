@@ -1,0 +1,164 @@
+---
+title: "DSC520_Week_8&9_M_ERSEVIM"
+author: "M_ERSEVIM"
+date: "10/29/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 8&9, Pt 3
+
+i) Explain any transformations or modifications you made to the dataset
+
+```{r}
+library(ggplot2)
+library(ggm)
+library(readxl)
+library(dplyr)
+library(plyr)
+library("QuantPsyc")
+library(boot)
+library(car)
+
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520/data")
+dir()
+
+## Load the Housing.xlsx data
+house_df <- read_excel("Housing.xlsx", col_names = TRUE)
+head(house_df)
+
+house_df2 <- ddply(house_df, .(sq_ft_lot), mutate,
+               Round_Lot = round(sq_ft_lot/100,0)*100) #Creates new variable - lot size rounded to nearest 100 ft^2
+
+house_df2$logofprice <- log(house_df2$'Sale Price') #Takes log of price
+
+house_df2$costpersqfoot <- (house_df2$'Sale Price'/house_df2$square_feet_total_living) # Create cost/ft^2
+head(house_df2)
+
+```
+I synthesized three new variables: Log of price, Cost per square foot, and lot size rounded to the nearest 100 square feet.
+Price is highly right-skewed, so taking the log make it appear more normal. Cost/ft^2 is a common house hunting stat, and rounding lot size makes it easier to comprehend (less noisy with fewer sig figs)
+
+
+ii) Create two models; one that will contain the variables Sale Price and Square Foot of Lot (same variables used from previous assignment on simple regression) and one that will contain Sale Price and several additional predictors of your choice. Explain the basis for your additional predictor selections.
+```{r}
+price_lm1 <-  lm(house_df2$'Sale Price' ~ sq_ft_lot , data=house_df2)
+price_lm2 <-  lm(house_df2$'Sale Price' ~ square_feet_total_living + bath_full_count + bedrooms + sq_ft_lot + square_feet_total_living, data=house_df2)
+coef_lmbeta1 <- lm.beta(price_lm1) #uses the QuantPSyc package to find the std betas from a lm easily
+coef_lmbeta2 <- lm.beta(price_lm2) #uses the QuantPSyc package to find the std betas from a lm easily
+```
+I added a few variables that are common knowledge as to influencing the price of a house: size (square feet), how many bathrooms and bedrooms, and how big the lot is.
+
+iii) Execute a summary() function on two variables defined in the previous step to compare the model results. What are the R2 and Adjusted R2 statistics? Explain what these results tell you about the overall model. Did the inclusion of the additional predictors help explain any large variations found in Sale Price?
+```{r}
+summary(price_lm1)
+coef_lmbeta1 #uses the QuantPSyc package to find the std betas from a lm easily
+
+summary(price_lm2)
+coef_lmbeta2
+
+```
+
+iv) Considering the parameters of the multiple regression model you have created. What are the standardized betas for each parameter and what do the values indicate?
+
+The standardized Betas for the multiple regression model are printed above. The variable with the strongest influence by far is the square footage.
+The number of bedrooms and bathrooms don't add much, and the lot size effect is negligible.
+
+
+v) Calculate the confidence intervals for the parameters in your model and explain what the results indicate.
+```{r}
+
+confint.lm(price_lm2, 'square_feet_total_living', level=0.95)
+confint.lm(price_lm2, 'bath_full_count', level=0.95)
+confint.lm(price_lm2, 'bedrooms', level=0.95)
+confint.lm(price_lm2, 'sq_ft_lot', level=0.95)
+
+```
+The above c.i.'s for the variables confirms that the range for the best predictor (sq ft tot living) is the narrowest.
+The other three have WIDE variation in potential slope.
+
+vi) Assess the improvement of the new model compared to your original model (simple regression model) by testing whether this change is significant by performing an analysis of variance.
+```{r}
+
+anova(price_lm1,price_lm2)
+```
+The second model is significantly better than the first simple model. The F-score is over 1,000(!) and the p-value is nearly 0.
+
+
+vii) Perform casewise diagnostics to identify outliers and/or influential cases, storing each function's output in a dataframe assigned to a unique variable name.
+```{r}
+
+house_df2$cookdist<- cooks.distance(price_lm2)
+house_df2$resid<- resid(price_lm2)
+house_df2$leverage<-hatvalues(price_lm2)
+house_df2$dffit<-dffits(price_lm2)
+house_df2$covratio<-covratio(price_lm2)
+
+head(house_df2[,c(28,29,30,31,32)])
+```
+
+viii) Calculate the standardized residuals using the appropriate command, specifying those that are +-2, storing the results of large residuals in a variable you create.
+```{r}
+
+house_df2$stdresid<-rstandard(price_lm2)
+head(house_df2$stdresid > 2 | house_df2$stdresid < -2)
+
+```
+
+ix) Use the appropriate function to show the sum of large residuals.
+```{r}
+house_df2$largeresid<-house_df2$stdresid >2 | house_df2$stdresid < -2
+sum(house_df2$largeresid)
+```
+
+x) Which specific variables have large residuals (only cases that evaluate as TRUE)?
+```{r}
+
+house_df2[house_df2$largeresid,c("stdresid")]
+          
+```
+
+xi) Investigate further by calculating the leverage, cooks distance, and covariance rations. Comment on all cases that are problematics.
+```{r}
+
+house_df2[house_df2$largeresid,c("leverage","cookdist","covratio")]
+
+```
+
+xii) Perform the necessary calculations to assess the assumption of independence and state if the condition is met or not.
+```{r}
+
+dwt(price_lm2)
+
+```
+The D-W test stat should be 2 or more, so the condition of indep is not quite fully met.
+
+
+xiii) Perform the necessary calculations to assess the assumption of no multicollinearity and state if the condition is met or not.
+```{r}
+mean(vif(price_lm2))
+```
+The regression may be biased as the test stat is above 1.0
+
+
+xiv) Visually check the assumptions related to the residuals using the plot() and hist() functions. Summarize what each graph is informing you of and if any anomalies are present.
+```{r}
+
+house_df2$fitted<-price_lm2$fitted.values
+plot(house_df2$stdresid)
+hist(house_df2$stdresid)
+
+```
+The scatter-plot shows many standardized residuals over a Z-score of 5, which should be rare, so there are improvements that need to be made to the model or
+ some multicollinearity that needs to be addressed.
+
+THe histogram is mostly centered around 0 and somewhat normal-shaped, however, the resolution is masking the issues you can see from the scatter-plot.
+
+xv) Overall, is this regression model unbiased? If an unbiased regression model, what does this tell us about the sample vs. the entire population model?
+
+No, the model is not unbiased. THe test statistics calculated above are borderline at best. However, the multi-variable model out-performs the original single variable model. 
+
+
