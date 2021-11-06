@@ -1,0 +1,112 @@
+---
+title: "DSC520 Final Project - Part II"
+author: "MICHAEL ERSEVIM"
+date: "Bellevue University, Fall 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Importing and cleaning the data 
+
+The first step in importing the data is either to run the SQL separately and save the output as a .csv file for easy importing.  
+
+The Select statement: 
+
+cast([effectiveDT] as date) as 'Start Eff Date'	,cast([lastEffectiveDT] as date) as 'End Eff Date' 
+,[specCost] as Cost	,[locationCityName] as City	,[locationCountyName] as County 
+,[locationStateProvinceCode] as State	,[locationPostalCode] as Zip 
+,[accountingBusinessUnitNumber] as ABN	,[serviceComponentTypeCode] as 'Svc Type' 
+,[materialTypeCode] as Mat	,[serviceOccurrenceTypeCode] as Sched		,[quantity] as Qty 
+,[sensitivityCode] as SCode	,[serviceBaselineTypeName] as TempOrPerm 
+,[equipmentTypeCode] as Container	,[equipmentSizeCode] as Size 
+
+ 
+
+Here are Where statements for filtering the fields from the WM ACORN database: 
+
+serviceComponentTypeCode in ('H', 'DSP')    and [materialTypeCode] in ('T', 'C&D', 'WD', 'SSR', 'MXR') 
+and [accountingBusinessUnitNumber] = '2355'	   and [serviceBaselineTypeName] = 'Permanent' 
+and [equipmentTypeCode] in ('OT', 'CMP')	   and [sensitivityCode] is Null 
+and ([effectiveDT] > '01/01/2021' or [lastEffectiveDT] is Null) 
+  
+
+# Final data profile and characteristics 
+
+Below is a picture of the top of the csv file that gets imported into R as a dataframe: 
+
+<Insert pic here>
+![Header of csv output](/Users/mersevim/OneDrive - Waste Management/Documents/MDE Personal/Bellevue DS classes/DSC520/proj_csv_head.PNG)
+
+Depending on the date ranges I am interested in, it will yield different row counts as output. I purposely chose a fairly recent window of dates in order to keep the file size small for working with as a heuristic. 
+
+Each row will have the date range, cost of service, the geographic information of the service location, and some explanatory variables: cost may depend on Svc Type, material type, quantity of containers at the property (usually only 1) and the size (‘Size’ = capacity in cubic yards) of the container being emptied. Some of these explanatory values have already been filtered for certain common values as found above in the Where statements. This reduces certain outlier types and constrains the output to a very focused dataset. 
+
+
+# Questions for next steps 
+
+One could also run the SQL within R and directly assign the output to a data-frame, however, it could take me too long to figure out the commands for handshaking with the servers and DB, etc to get it to work for this project.  
+ 
+
+# Information not readily apparent  
+
+Some of the information needed are the exact positions of the land-fills to which the trash is taken. That information combined with ARC-GIS data could help determine the actual likely roads taken to these facilities from a client’s location. This would ultimately provide a mileage which could be introduced into the model to help predict cost for haul.  
+
+I would also need a complete listing of the types of materials that these facilities accept. This ensures you are mapping the haul route to the nearest correct type of facility for the material to be disposed of. 
+
+ 
+
+# Different ways to analyze the data  
+
+Another way to potentially analyze the data would be to look at the vendors themselves and the costs they charge to do services on our behalf. The current dataset is agnostic of vendor. This is because when we quote a price to a customer, we don’t know who the vendor will be at the time of the initial request. We are quoting ‘blind’ and procuring the service after the fact.  
+
+However, if there were some ways to infer or predict which vendor may be able to do the service based on the area (zip code) and their predominance in certain areas, then having a specific cost prediction by vendor may be more accurate. 
+
+Some new variables to be created are: 
+
+Price per container if quantity > 1. This is a simple division to get the unit cost.
+
+Higher-level zip code areas - this can be done by using only the first four digits of the zip.
+
+Some features to be ﬁltered on: 
+
+Container type – an Open top container may show different cost from a compactor unit 
+
+Schedule type – a regular schedule may have lower costs than an ‘on-demand’ service 
+
+ 
+
+# Summaries to answer questions 
+
+Compiling simple summaries of the data can help answer some questions. Knowing the distributions of the costs of certain services show us the range and variability of costs across the country. This helps us look towards the explanatory variables and see if they make intuitive sense from a business perspective. 
+
+If there are findings in the profiling of the data that don’t jibe with the expectations of those that have a lot of experience in the waste management field, this may be cause for either re-evaluating the data or probing the long-held assumptions and expectations more deeply. 
+
+
+# Illustrative Plots and Tables  
+
+There are a few types of plots and tables that will help to illustrate the findings. They include:  
+
+Heat maps by zip code within states can show patterns of high to low costs. I would suspect the results will be a combination of competition levels as well as actual cost level given haul distances to facilities and disposal rates at landfills for trash. 
+
+A table with factors showing the relative cost levels of  
+
+Differing materials (Trash, Cardboard, Single stream recycling, Demo, etc) 
+
+Differing container sizes (20, 30, 40 yards) 
+
+Differing container types (Open top vs Compactor) 
+
+Schedule type (on-call vs scheduled)   
+
+  
+
+# Potential M-L techniques 
+
+ 
+Using clustering techniques within appropriate geography boundaries (Zip code level? City level?) may simplify the identification of outlier values for Cost given similarly parameterized services. 
+
+For example, looking at all Hauls of ‘Size’ = 30, material = ‘T’ (trash), and TempOrPerm = ‘Permanent’ should all have costs within a certain range. Any extreme values could be flagged or excluded using clustering techniques.  
