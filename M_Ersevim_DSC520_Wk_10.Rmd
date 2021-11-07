@@ -1,0 +1,104 @@
+---
+title: "DSC520 Week 10 Exercises"
+author: "MICHAEL ERSEVIM"
+date: "11/5/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercises for week 10
+
+First, we will fit a binary logistic regression model to the data set that predicts whether or not the patient survived for one year (the Risk1Y variable) after the surgery. We will use the glm() function to perform the logistic regression.
+
+
+```{r}
+library(foreign)
+library(caret)
+
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/MDE Personal/Bellevue DS classes/DSC520")
+#dir()
+
+df <- read.arff("ThoraricSurgery.arff") #assigns dataframe
+#head(df) #used to ensure it worked
+
+# fit logistic regression to all variables to see which look promising
+survival <- glm(Risk1Yr ~ DGN + PRE4 + PRE5 + PRE6 + PRE7 + PRE8 + PRE9 + PRE10 + PRE11 + PRE14 + PRE17 + PRE19 + PRE25 + PRE30 + PRE32,data=df, family=binomial(link="logit"))
+summary(survival)
+
+# remove all non-significant variables from model for improved model
+survival2 <- glm(Risk1Yr ~ PRE9 + PRE14 + PRE17 + PRE30,data=df, family=binomial(link="logit"))
+summary(survival2)
+
+
+```
+
+# Summary results
+
+According to the summary, variables 'PRE9', 'PRE14', 'PRE17' and 'PRE30' had the greatest effect on the survival rate.
+
+```{r}
+
+library(caret)
+
+
+pdata <- fitted(survival2)
+pdata2 <- as.factor(ifelse(pdata > 0.5,'T','F'))
+df2fctr <- as.factor(df$Risk1Yr)
+
+#summary(pdata2)
+#summary(df2fctr)
+
+confusionMatrix(pdata2,df2fctr)
+
+
+
+```
+
+# Accuracy
+
+ What is the accuracy of your model?
+ Ans: 84.5%
+ 
+
+# Question 2
+
+Fit a logistic regression model to the binary-classifier-data.csv dataset
+
+```{r}
+
+library(readr)
+
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/MDE Personal/Bellevue DS classes/DSC520")
+#dir()
+
+df2 <- read.csv('binary-classifier-data.csv')
+#head(df2)
+
+fitdf2 <- glm(label ~ x + y, data=df2, family=binomial(link="logit"))
+summary(fitdf2)
+
+
+```
+
+
+What is the accuracy of the logistic regression classifier?
+Answer: 58.34%
+
+```{r}
+
+library(caret)
+
+pdata <- fitted(fitdf2)
+pdata2 <- as.factor(ifelse(pdata > 0.5,1,0))
+
+#summary(pdata2)
+#summary(df2$label)
+
+df2fctr <- as.factor(df2$label)
+confusionMatrix(pdata2,df2fctr)
+
+```
+
