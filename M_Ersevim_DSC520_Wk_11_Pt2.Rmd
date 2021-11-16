@@ -1,0 +1,83 @@
+---
+title: "DSC520_Ex_11.2 - Pt2"
+author: "M_ERSEVIM"
+date: "11/15/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 11.2 - Part 2
+
+In this problem, we will use the k-means clustering algorithm to look for patterns in an unlabeled dataset. 
+The dataset for this problem is found at data/clustering-data.csv.
+
+```{r}
+
+library(ggplot2)
+library(ggm)
+library(readxl)
+library(dplyr)
+library(useful)
+
+
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520/data")
+dir()
+
+## Load the classifier datasets
+df <- read.csv("clustering-data.csv", header = TRUE)
+head(df)
+
+
+```
+
+## Exercise 11.2 - Part 2 continued...
+
+Plot the dataset using a scatter plot.
+
+```{r}
+
+#Plot  classifier
+gdf <- ggplot(df, aes(x=x, y=y))
+gdf + geom_point()
+
+```
+## Exercise 11.2 - Part 2 continued...
+
+Fit the dataset using the k-means algorithm from k=2 to k=12. Create a scatter plot of the resultant clusters for each value of k.
+
+```{r}
+
+dfbest <- FitKMeans(df, max.clusters=12, nstart=35) #Try all between 2 and 12 clusters
+dfbest
+
+PlotHartigan(dfbest)
+```
+## Exercise 11.2 - Part 2 continued...
+
+Calculate the average distance from the center of each cluster for each value of k and plot it as a line chart where k is the x-axis and the average distance is the y-axis.
+
+```{r}
+
+head(df)
+
+set.seed(123)
+# Compute and plot wss for k = 2 to k = 12.
+k.max <- 12
+wss <- sapply(1:k.max, 
+              function(k){kmeans(df, k, nstart=50,iter.max = 12 )$tot.withinss})/nrow(df)
+wss
+plot(1:k.max, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+
+```
+
+## Exercise 11.2 - Part 2 continued...
+
+One way of determining the “right” number of clusters is to look at the graph of k versus average distance and finding the “elbow point”. Looking at the graph you generated in the previous example, what is the elbow point for this dataset?
+
+Ans: Perhaps 3 or 4 clusters gives the biggest bang for the buck.

@@ -1,0 +1,99 @@
+---
+title: "DSC520_Ex_11.2"
+author: "M_ERSEVIM"
+date: "11/15/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 11.2
+
+Plot the data from each dataset using a scatter plot.
+
+```{r}
+
+library(ggplot2)
+library(ggm)
+library(readxl)
+library(dplyr)
+library(useful)
+
+
+setwd("/Users/mersevim/OneDrive - Waste Management/Documents/GitHub/dsc520/data")
+#dir()
+
+## Load the classifier datasets
+dfbi <- read.csv("binary-classifier-data.csv", header = TRUE)
+#head(dfbi)
+
+dftri <- read.csv("trinary-classifier-data.csv", header = TRUE)
+#head(dftri)
+
+#Plot binary classifier
+gbi <- ggplot(dfbi, aes(x=x, y=y))
+gbi + geom_point(aes(color=label))
+
+#Plot trinary classifier
+gtri <- ggplot(dftri, aes(x=x, y=y))
+gtri + geom_point(aes(color=label))
+
+```
+
+## Ex 11.2 continued...
+
+Fit a k nearest neighbors’ model for each dataset for k=3, k=5, k=10, k=15, k=20, and k=25. 
+
+Compute the accuracy of the resulting models for each value of k. 
+
+
+```{r}
+
+#fit each dataset to k-means
+set.seed(20)
+
+kbi3 <- kmeans(x=dfbi, centers=3)
+kbi5 <- kmeans(x=dfbi, centers=5)
+kbi10 <- kmeans(x=dfbi, centers=10)
+kbi15<- kmeans(x=dfbi, centers=15)
+kbi20 <- kmeans(x=dfbi, centers=20)
+kbi25 <- kmeans(x=dfbi, centers=25)
+
+kbibest <- FitKMeans(dfbi, max.clusters=25, nstart=35) #Try all between 2 and 25 clusters
+kbibest
+
+
+ktri3 <- kmeans(x=dftri, centers=3)
+ktri5 <- kmeans(x=dftri, centers=5)
+ktri10 <- kmeans(x=dftri, centers=10)
+ktri15<- kmeans(x=dftri, centers=15)
+ktri20 <- kmeans(x=dftri, centers=20)
+ktri25 <- kmeans(x=dftri, centers=25)
+
+ktribest <- FitKMeans(dftri, max.clusters=25, nstart=35) #Try all between 2 and 25 clusters
+ktribest
+
+```
+## Ex 11.2 continued...
+
+Plot the results in a graph where the x-axis is the different values of k and the y-axis is the accuracy of the model.
+
+```{r}
+PlotHartigan(kbibest) #Using Hartigan's test as a proxy for accuracy.
+
+PlotHartigan(ktribest)
+```
+## Ex 11.2 continued...
+Q: Looking back at the plots of the data, do you think a linear classifier would work well on these datasets?
+
+Ans: No - the data points are scattered in mini clusters all over the 2-D plane, with overlaps. A curvilinear separator would be difficult to draw , never mind a linear one!
+
+Q: How does the accuracy of your logistic regression classifier from last week compare?  
+
+Ans: The accuracy completely depends on the number of centroids. Somewhere around 21 or 22 clusters would minimie the errors, however, the 'elbow' seems to occur around 7 or 8 for the two distributions.
+
+Q: Why is the accuracy different between these two methods?
+
+Ans: The difference is that you get a probability of the classifier being 'correct' based on where in the logistic regression the point falls on. IN the case of clustering, you are summing the squares of the distance to the centroid and trying to minimize that amount by choosing the centroid wisely.
