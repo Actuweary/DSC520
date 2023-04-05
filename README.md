@@ -1,2 +1,2 @@
 # DSC520
-This is my personal repo for homework projects required for Bellevue University DSC520 course.
+This is my personal repo for projects related to working with R.
